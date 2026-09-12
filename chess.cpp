@@ -19,18 +19,21 @@ a1, b1, c1, d1, e1, f1, g1, h1,
 
 };
 
-/*
+const char *square_to_cordinates[]{
+"a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+"a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
+"a6", "b6", "c6", "d6", "e6", "f6", "g6", "h6",
+"a5", "b5", "c5", "d5", "e5", "f5", "g5", "h5",
+"a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
+"a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
+"a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
+"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
 
-'a8', 'b8', 'c8', 'd8', 'e8', 'f8', 'g8', 'h8',
-'a7', 'b7', 'c7', 'd7', 'e7', 'f7', 'g7', 'h7',
-'a6', 'b6', 'c6', 'd6', 'e6', 'f6', 'g6', 'h6',
-'a5', 'b5', 'c5', 'd5', 'e5', 'f5', 'g5', 'h5',
-'a4', 'b4', 'c4', 'd4', 'e4', 'f4', 'g4', 'h4',
-'a3', 'b3', 'c3', 'd3', 'e3', 'f3', 'g3', 'h3',
-'a2', 'b2', 'c2', 'd2', 'e2', 'f2', 'g2', 'h2',
-'a1', 'b1', 'c1', 'd1', 'e1', 'f1', 'g1', 'h1',
 
-*/
+};
+
+
+
 enum
 {
     white,
@@ -98,7 +101,35 @@ const U64 not_hg_file = 4557430888798830399ULL;
 const U64 not_ab_file = 18229723555195321596ULL;
 
 
+// Relevant occupancy bit count for every square on board for bishop
+const int bishop_relevant_bits[64] {
+    6, 5, 5, 5, 5, 5, 5, 6,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 9, 9, 7, 5, 5,
+    5, 5, 7, 7, 7, 7, 5, 5,
+    5, 5, 5, 5, 5, 5, 5, 5,
+    6, 5, 5, 5, 5, 5, 5, 6
+};
+
+// Relevant occupancy bit count for every square on board for rook
+const int rook_relevant_bits[64] {
+    12, 11, 11, 11, 11, 11, 11, 12,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    11, 10, 10, 10, 10, 10, 10, 11,
+    12, 11, 11, 11, 11, 11, 11, 12
+};
+
+
+
+
 void print_bitboard(U64 bitboard);
+
 
 
 // Bit Macros //
@@ -124,14 +155,15 @@ void getChessSquares()
 {
     for (int rank = 8; rank >= 1; rank--)
     {
-        std::cout << "" << "a" << rank << ", ";
-        std::cout << "" << "b" << rank << ", ";
-        std::cout << "" << "c" << rank << ", ";
-        std::cout << "" << "d" << rank << ", ";
-        std::cout << "" << "e" << rank << ", ";
-        std::cout << "" << "f" << rank << ", ";
-        std::cout << "" << "g" << rank << ", ";
-        std::cout << "" << "h" << rank << ", \n";
+        std::cout << "\"" << "a" << rank << "\", ";
+        std::cout << "\"" << "b" << rank << "\", ";
+        std::cout << "\"" << "c" << rank << "\", ";
+        std::cout << "\"" << "d" << rank << "\", ";
+        std::cout << "\"" << "e" << rank << "\", ";
+        std::cout << "\"" << "f" << rank << "\", ";
+        std::cout << "\"" << "g" << rank << "\", ";
+        std::cout << "\"" << "h" << rank << "\",\n";
+        
     }
 }
 // Print bitboard
@@ -163,6 +195,27 @@ void print_bitboard(U64 bitboard)
     std::cout << "\nBitboard: ";
     std::cout << bitboard;
     std::cout << "\n\n";
+}
+// count bits within bitboard slow? O(1) but make 64 iterations ig
+int count_bits (U64 bitboard){
+    int bits = 0;
+
+    while (bitboard){
+        bitboard &= bitboard -1;
+        bits++;
+    }
+
+    return bits;
+}
+
+// Get least signiifcant 1st bit index
+int get_ls1b_index(U64 bitboard){
+    if(bitboard){
+        // Get trailing bits before 
+        return count_bits((bitboard &= (-bitboard)) -1 );
+    }else {
+        return -1;
+    }
 }
 
 // generate pawn attacks
@@ -389,7 +442,7 @@ void init_knight_attacks(){
 void init_king_attacks(){
     for(int square = 0; square < 64; square++){
         knight_attacks[square] = mask_king_attacks(square);
-        print_bitboard(knight_attacks[square]);
+        //print_bitboard(knight_attacks[square]);
     }   
 }
 
@@ -400,21 +453,38 @@ void init_leaper_attacks(){
     init_pawn_attacks();
 }
 
+
+//Set occupancies
+U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask){
+    // Occupancy map
+    U64 occupancy = 0ULL;
+
+    for (int count = 0; count < bits_in_mask; count++){
+        int square = get_ls1b_index(attack_mask);
+
+        pop_bit(attack_mask,square);
+        if(index & (1 << count)){
+            //populate occuancy map
+            set_bit(occupancy,square);
+
+        }
+    }
+
+    return occupancy;
+}
+
+
 int main()
 {
-    U64 bit_board = 0ULL;
-    //init_leaper_attacks();
-    //print_bitboard(mask_king_attacks(a1));
-    U64 blocked = 0ULL;
-    set_bit(blocked,b6);
-    set_bit(blocked,g4);
-    set_bit(blocked,e3);
-    set_bit(blocked,b2);
+    init_leaper_attacks();
 
+    for (int rank = 0; rank < 8; rank++){
+        for (int file = 0; file < 8; file++){
+            int square = rank * 8 + file;
+            std::cout<< count_bits(mask_rook_attacks(square)) << ", ";
+        }
+        std::cout<< "\n";
+    }
 
-
-    //for (int square = 0; square < 64; square++){
-        print_bitboard(generate_rook_attacks(b4,blocked));
-    //}
     return 0;
 }
