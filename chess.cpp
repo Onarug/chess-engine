@@ -240,6 +240,136 @@ U64 mask_king_attacks(int square){
 
 }
 
+// mask bishop attacks
+U64 mask_bishop_attacks(int square){
+    U64 attacks = 0ULL;
+    // init ranks and files
+    int r,f;
+    //init target ranke and files
+    int tr = square /8;
+    int tf = square % 8;
+
+    for (r = tr +1,f = tf +1; r <= 6 && f <=6; r++,f++){
+        attacks |= (1ULL << ( r* 8 + f));
+    }
+    for (r = tr -1 ,f = tf +1; r >= 1 && f <=6; r--,f++){
+        attacks |= (1ULL << ( r* 8 + f));
+    }
+    for (r = tr + 1 ,f = tf  - 1; r <= 6 && f >= 1; r++,f--){
+        attacks |= (1ULL << ( r* 8 + f));
+    }
+    for (r = tr - 1 ,f = tf  - 1; r >= 1 && f >= 1; r--,f--){
+        attacks |= (1ULL << ( r* 8 + f));
+    }
+    return attacks;
+}
+
+// mask rook attacks
+U64 mask_rook_attacks(int square){
+    U64 attacks = 0ULL;
+    // init ranks and files
+    int r,f;
+    //init target ranke and files
+    int tr = square /8;
+    int tf = square % 8;
+
+    for (r = tr +1; r <= 6 ; r++){
+        attacks |= (1ULL << ( r* 8  +tf));
+    }
+    for (r = tr - 1; r >= 1 ; r--){
+        attacks |= (1ULL << ( r* 8  +tf));
+    }
+    //tr = square /8;
+    for (f = tf +1; f <= 6 ; f++){
+        attacks |= (1ULL << ( tr* 8  +f));
+    }
+    for (f = tf - 1; f >= 1 ; f--){
+        attacks |= (1ULL << ( tr* 8  +f));
+    }
+    
+    return attacks;
+}
+
+
+
+// generate pishop attakcs on the fly
+U64 generate_bishop_attacks(int square,U64 block){
+    U64 attacks = 0ULL;
+    // init ranks and files
+    int r,f;
+    int tr = square /8;
+    int tf = square % 8;
+
+
+
+    //generate bishop attacks
+    for (r = tr +1,f = tf +1; r <= 7 && f <=7; r++,f++){
+        
+        attacks |= (1ULL << ( r* 8 + f));
+        if (((1ULL) << (r * 8 + f)) & block ){
+            break;
+        }
+    }
+    for (r = tr -1 ,f = tf +1; r >= 0 && f <=7; r--,f++){
+        attacks |= (1ULL << ( r* 8 + f));
+        if (((1ULL) << (r * 8 + f)) & block ){
+            break;
+        }
+    }
+    for (r = tr + 1 ,f = tf  - 1; r <= 7 && f >= 0; r++,f--){
+        attacks |= (1ULL << ( r* 8 + f));
+        if (((1ULL) << (r * 8 + f)) & block ){
+            break;
+        }
+    }
+    for (r = tr - 1 ,f = tf  - 1; r >= 0 && f >= 0; r--,f--){
+        attacks |= (1ULL << ( r* 8 + f));
+        if (((1ULL) << (r * 8 + f)) & block ){
+            break;
+        }
+    }
+    return attacks;
+}
+
+
+U64 generate_rook_attacks(int square, U64 block){
+    U64 attacks = 0ULL;
+    // init ranks and files
+    int r,f;
+    //init target ranke and files
+    int tr = square /8;
+    int tf = square % 8;
+
+    for (r = tr +1; r <= 7 ; r++){
+        attacks |= (1ULL << ( r* 8  +tf));
+        if (((1ULL) << ( r* 8  +tf)) & block ){
+            break;
+        }
+    }
+    for (r = tr - 1; r >= 0 ; r--){
+        attacks |= (1ULL << ( r* 8  +tf));
+        if (((1ULL) << ( r* 8  +tf)) & block ){
+            break;
+        }
+    }
+    //tr = square /8;
+    for (f = tf +1; f <= 7 ; f++){
+        attacks |= (1ULL << ( tr* 8  +f));
+         if (((1ULL) << ( tr* 8  +f)) & block ){
+            break;
+        }
+    }
+    for (f = tf - 1; f >= 0 ; f--){
+        attacks |= (1ULL << ( tr* 8  +f));
+         if (((1ULL) << ( tr* 8  +f)) & block ){
+            break;
+        }
+    }
+    
+    return attacks;
+}
+
+
 //Generate Pawn Attacks
 void init_pawn_attacks(){
     for (int square = 0; square < 64; square++){
@@ -263,6 +393,7 @@ void init_king_attacks(){
     }   
 }
 
+
 void init_leaper_attacks(){
     init_king_attacks();
     init_knight_attacks();
@@ -272,7 +403,18 @@ void init_leaper_attacks(){
 int main()
 {
     U64 bit_board = 0ULL;
-    init_leaper_attacks();
+    //init_leaper_attacks();
     //print_bitboard(mask_king_attacks(a1));
+    U64 blocked = 0ULL;
+    set_bit(blocked,b6);
+    set_bit(blocked,g4);
+    set_bit(blocked,e3);
+    set_bit(blocked,b2);
+
+
+
+    //for (int square = 0; square < 64; square++){
+        print_bitboard(generate_rook_attacks(b4,blocked));
+    //}
     return 0;
 }
