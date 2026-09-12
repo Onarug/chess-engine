@@ -150,6 +150,42 @@ U64 knight_attacks[64];
 U64 king_attacks[64];
 
 
+// Random number generation
+unsigned int state = 1804289383;
+// generate 32 bit psuedo legal numnbers
+unsigned int get_random_U32_number(){
+    // get current state
+    unsigned int number = state;
+    // XOR shift
+    number ^= number << 13;
+    number ^= number >> 17;
+    number ^= number << 5;
+
+    // Update random number stte
+    state = number;
+
+    return number;
+
+
+}
+// generate 64 bit one 
+U64  get_random_U64_number(){
+    // define 4 random numbers
+    U64 n1,n2,n3,n4;
+    n1 = (U64)(get_random_U32_number() & 0xFFFF);
+    n2 = (U64)(get_random_U32_number() & 0xFFFF);
+    n3 = (U64)(get_random_U32_number() & 0xFFFF);
+    n4 = (U64)(get_random_U32_number() & 0xFFFF);
+
+    return n1 | (n2 << 16 ) | (n3 << 32) | (n4 << 48);
+
+ 
+
+}
+
+U64 generate_magic_number(){
+    return get_random_U64_number() & get_random_U64_number() & get_random_U64_number();
+}
 
 void getChessSquares()
 {
@@ -474,17 +510,21 @@ U64 set_occupancy(int index, int bits_in_mask, U64 attack_mask){
 }
 
 
+
 int main()
 {
     init_leaper_attacks();
+    
+    //std::cout << get_random_U32_number() << "\n";
 
-    for (int rank = 0; rank < 8; rank++){
-        for (int file = 0; file < 8; file++){
-            int square = rank * 8 + file;
-            std::cout<< count_bits(mask_rook_attacks(square)) << ", ";
-        }
-        std::cout<< "\n";
-    }
+   
+    print_bitboard(generate_magic_number());
+
+
+
+    
+
+    
 
     return 0;
 }
