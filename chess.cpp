@@ -1,6 +1,7 @@
 #include <iostream>
 #include<string.h>
 #include <cstdio>
+#include <unordered_map>
 
 
 // Define
@@ -18,7 +19,7 @@ a5, b5, c5, d5, e5, f5, g5, h5,
 a4, b4, c4, d4, e4, f4, g4, h4,
 a3, b3, c3, d3, e3, f3, g3, h3,
 a2, b2, c2, d2, e2, f2, g2, h2,
-a1, b1, c1, d1, e1, f1, g1, h1,
+a1, b1, c1, d1, e1, f1, g1, h1, no_square
 
 };
 
@@ -30,7 +31,7 @@ const char *square_to_cordinates[]{
 "a4", "b4", "c4", "d4", "e4", "f4", "g4", "h4",
 "a3", "b3", "c3", "d3", "e3", "f3", "g3", "h3",
 "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+"a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1"
 
 
 };
@@ -40,11 +41,18 @@ const char *square_to_cordinates[]{
 enum
 {
     white,
-    black
+    black,
+    both
 };
 
 enum {
     rook, bishop
+};
+
+// encode pieces black lower case white upper case
+enum{
+    P,N,B,R,Q,K,
+    p,n,b,r,q,k
 };
 
 
@@ -272,15 +280,68 @@ U64 bishop_magic_numbers[64]{
 
 void print_bitboard(U64 bitboard);
 
+// Chess Board Variables
+// Piece bitboards
+U64 bitboards[12];
 
+// Occupancy bitboards
+U64 occupancies[3];
+
+// side to move
+int side ;
+
+// en passent squares
+int enpassent = no_square;
+
+// Castling rights
+/*
+
+0001 white king castles to kings side
+0010 white king castles to queen side
+0100 black king castles to king side
+1000 black king castles to queen side
+
+*/
+int castle;
+
+
+enum{
+    wk =1,wq=2,bk=4,bq=8
+};
+
+// ascii_pieces
+std::string ascii_pieces = "PNBRQKpnbrqk";
+
+// unicode pieces might not use since windows acts weird and this isnt the gui I want to use
+const char *unicode_pieces[12] = {
+
+    "♟",
+    "♞",
+    "♝",
+    "♜",
+    "♛",
+    "♚",
+    "♙",
+    "♘",
+    "♗",
+    "♖",
+    "♕",
+    "♔",
+};
+// character to encoded const
+
+std::unordered_map<char, int> char_pieces = {
+    {'P', P}, {'N', N}, {'B', B}, {'R', R}, {'Q', Q}, {'K', K},
+    {'p', p}, {'n', n}, {'b', b}, {'r', r}, {'q', q}, {'k', k}
+};
 
 // Bit Macros //
 // Get bit
-#define get_bit(bitboard, square) (bitboard & (1ULL << square))
+#define get_bit(bitboard, square) ((bitboard & (1ULL << square)))
 // Set bit
-#define set_bit(bitboard, square) (bitboard |= (1ULL << square))
+#define set_bit(bitboard, square) ((bitboard |= (1ULL << square)))
 // Pop bit
-#define pop_bit(bitboard, square) (get_bit(bitboard, square) ? bitboard ^= (1ULL << square) : 0)
+#define pop_bit(bitboard, square) ((get_bit(bitboard, square) ? bitboard ^= (1ULL << square) : 0))
 
 // pawn attacks table
 U64 pawn_attacks[2][64];
@@ -383,6 +444,42 @@ void print_bitboard(U64 bitboard)
     std::cout << bitboard;
     std::cout << "\n\n";
 }
+
+void print_board(){
+    std::cout << "\n";
+    for (int rank = 0; rank < 8; rank++){
+        for (int file = 0; file < 8; file++){
+            // Init sqaure
+            int square = rank * 8 + file;
+            if (!file){
+                std::cout << (8 - rank) << " ";
+            }
+            int piece = -1;
+
+            //loop through piece occupancies
+            for (int b_piece = P; b_piece <= k; b_piece++){
+                if(get_bit(bitboards[b_piece],square)){
+                    piece = b_piece;
+                }
+            }
+
+            std::cout << ((piece == -1) ? '.' : (ascii_pieces[piece]));
+            std::cout << " ";
+        }
+        std::cout <<"\n";
+    }
+    std::cout << "  a b c d e f g h \n\n";
+    std::cout << "  " << (!side ?  "White" : "Black") << " to play\n";
+    std::cout << "  " << "Enpassent: " << ((enpassent == no_square) ? "None" : square_to_cordinates[enpassent] )  << "\n";
+    std::cout << "  " << "Castling " << ((castle & wk) ? 'K' : '-');
+    std::cout <<   ((castle & wq) ? 'Q' : '-');
+    std::cout <<   ((castle & bk) ? 'k' : '-');
+    std::cout <<   ((castle & bq) ? 'q' : '-');
+
+    
+
+}
+
 // count bits within bitboard slow? O(1) but make 64 iterations ig
 int count_bits (U64 bitboard){
     int bits = 0;
@@ -800,22 +897,27 @@ void init_all(){
 int main()
 {
     init_all();
+    set_bit(bitboards[P],a2);
+    set_bit(bitboards[P],b2);
+    set_bit(bitboards[P],c2);
+    set_bit(bitboards[P],d2);
+    set_bit(bitboards[P],e2);
+    set_bit(bitboards[P],f2);
+    set_bit(bitboards[P],g2);
+    set_bit(bitboards[P],h2);
 
-    // test bitboard
-    U64 occupancy = 0Ull;
-    
-    set_bit(occupancy,c5);
-    set_bit(occupancy,g7);
-    print_bitboard(occupancy);
+    set_bit(bitboards[N],b1);
+    set_bit(bitboards[N],g1);
 
-    // Priint bishop attacks
+    set_bit(bitboards[B],c1);
+    set_bit(bitboards[B],f1);
 
-    print_bitboard(get_bishop_attacks(d4,occupancy));
-    print_bitboard(get_rook_attacks(g5,occupancy));
+    castle |= wq;
 
-    
 
-    
+
+ 
+    print_board();
 
     return 0;
 }

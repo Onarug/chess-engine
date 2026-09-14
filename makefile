@@ -1,2 +1,2 @@
 chess: chess.cpp
-	g++ chess.cpp -o chess
+	g++ -finput-charset=UTF-8 -fexec-charset=UTF-8 chess.cpp -o chess
