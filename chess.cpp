@@ -895,6 +895,28 @@ U64 get_rook_attacks(int square, U64 occupancy){
 
 
 }
+U64 get_queen_attacks(int square, U64 occupancy){
+    // Init results
+    U64 queen_attacks = 0ULL;
+
+    U64 bishop_occupancy = occupancy;
+    U64 rook_occupancy = occupancy;
+
+    bishop_occupancy &= bishop_masks[square];
+    bishop_occupancy *= bishop_magic_numbers[square];
+    bishop_occupancy >>= 64 - bishop_relevant_bits[square];
+
+    queen_attacks |= bishop_attacks[square][bishop_occupancy];
+
+
+    rook_occupancy &= rook_masks[square];
+    rook_occupancy *= rook_magic_numbers[square];
+    rook_occupancy >>= 64 - rook_relevant_bits[square];
+
+    queen_attacks |= rook_attacks[square][rook_occupancy];
+
+    return queen_attacks;
+}
 
 void fen_parser(const std::string &fen){
     std::vector<std::string> tokens;
@@ -970,20 +992,15 @@ void init_all(){
 
 int main()
 {
-    fen_parser("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    print_board();
+    init_all();
+    U64 bitboard = 0ULL;
+    set_bit(bitboard,e4);
+    set_bit(bitboard,e5);
+    set_bit(bitboard,d3);
+    
 
-    fen_parser("rnbqk2r/p4ppp/4pn2/1pPp4/5P2/5N2/PPPN1PPP/R2QKB1R w KQkq b6 0 8");
-    print_board();
-
-    fen_parser("rnb2rk1/p4ppp/1q2pn2/3p4/5P2/1N1B1N2/PPP2PPP/R2QK2R b KQ - 3 10");
-    print_board();
-
-    fen_parser("r1b2rk1/p4ppp/1qn1pn2/3p4/5P2/1N1B1N2/PPP2PPP/2RQK2R b K - 5 11");
-    print_board();
-    //print_bitboard(occupancies[white]);
-    //print_bitboard(occupancies[black]);
-    //print_bitboard(occupancies[both]);
+   
+    print_bitboard(get_queen_attacks(e3,bitboard));
 
 
     return 0;
