@@ -981,6 +981,51 @@ void fen_parser(const std::string &fen){
     
 }
 
+int is_square_attacked(int square, int side){
+    // attqacked by white pawns
+    if((side == white) && (pawn_attacks[black][square] & bitboards[P])){
+        return 1;
+    }
+    if((side == black) && (pawn_attacks[white][square] & bitboards[p])){
+        return 1;
+    }
+    if(knight_attacks[square] & ((side == white) ? bitboards[N] : bitboards[n])){
+        return 1;
+    }
+    if(get_bishop_attacks(square,occupancies[both]) & ((side == white) ? bitboards[B] : bitboards[b])){
+        return 1;
+    }
+    if(get_rook_attacks(square,occupancies[both]) & ((side == white) ? bitboards[R] : bitboards[r])){
+        return 1;
+    }
+    if(get_queen_attacks(square,occupancies[both]) & ((side == white) ? bitboards[Q] : bitboards[q])){
+        return 1;
+    }
+    if(king_attacks[square] & ((side == white) ? bitboards[K] : bitboards[k])){
+        return 1;
+    }
+
+    return 0;
+}
+
+void print_attacked_sqaures(int side){
+    std::cout<<"\n";
+    for (int rank =0; rank < 8; rank++){
+        for(int file = 0; file < 8; file++){
+            int square = rank * 8 + file;
+            if (!file){
+                std::cout << (8 - rank) << " ";
+            }
+            std::cout << (is_square_attacked(square,side) ? 1 :0 ) << " ";
+        }
+        std::cout << "\n";
+
+
+    }
+    std::cout << "  a b c d e f g h \n\n";
+
+}
+
 void init_all(){
     init_leaper_attacks();
     init_sliders_attacks(bishop);
@@ -993,14 +1038,14 @@ void init_all(){
 int main()
 {
     init_all();
-    U64 bitboard = 0ULL;
-    set_bit(bitboard,e4);
-    set_bit(bitboard,e5);
-    set_bit(bitboard,d3);
-    
+    fen_parser("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+    //fen_parser("8/8/4r3/3B4/8/3Q4/8/r7 w KQkq - 0 1");
 
+    print_board(); 
+    print_attacked_sqaures(white);
+    print_bitboard(occupancies[both]);
    
-    print_bitboard(get_queen_attacks(e3,bitboard));
+    
 
 
     return 0;
