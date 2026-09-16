@@ -2,7 +2,9 @@
 #include<string.h>
 #include <cstdio>
 #include <unordered_map>
-
+#include <sstream>
+#include <vector>
+#include <cctype>
 
 // Define
 // Primary variable for the bit borade 64 bits for 8 by 8 sqaure
@@ -22,7 +24,16 @@ a2, b2, c2, d2, e2, f2, g2, h2,
 a1, b1, c1, d1, e1, f1, g1, h1, no_square
 
 };
-
+std::unordered_map<std::string, int> coordinates_to_square{
+    {"a8", a8}, {"b8", b8}, {"c8", c8}, {"d8", d8}, {"e8", e8}, {"f8", f8}, {"g8", g8}, {"h8", h8},
+    {"a7", a7}, {"b7", b7}, {"c7", c7}, {"d7", d7}, {"e7", e7}, {"f7", f7}, {"g7", g7}, {"h7", h7},
+    {"a6", a6}, {"b6", b6}, {"c6", c6}, {"d6", d6}, {"e6", e6}, {"f6", f6}, {"g6", g6}, {"h6", h6},
+    {"a5", a5}, {"b5", b5}, {"c5", c5}, {"d5", d5}, {"e5", e5}, {"f5", f5}, {"g5", g5}, {"h5", h5},
+    {"a4", a4}, {"b4", b4}, {"c4", c4}, {"d4", d4}, {"e4", e4}, {"f4", f4}, {"g4", g4}, {"h4", h4},
+    {"a3", a3}, {"b3", b3}, {"c3", c3}, {"d3", d3}, {"e3", e3}, {"f3", f3}, {"g3", g3}, {"h3", h3},
+    {"a2", a2}, {"b2", b2}, {"c2", c2}, {"d2", d2}, {"e2", e2}, {"f2", f2}, {"g2", g2}, {"h2", h2},
+    {"a1", a1}, {"b1", b1}, {"c1", c1}, {"d1", d1}, {"e1", e1}, {"f1", f1}, {"g1", g1}, {"h1", h1}
+};
 const char *square_to_cordinates[]{
 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
 "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
@@ -446,7 +457,7 @@ void print_bitboard(U64 bitboard)
 }
 
 void print_board(){
-    std::cout << "\n";
+    std::cout << "\n\n\n";
     for (int rank = 0; rank < 8; rank++){
         for (int file = 0; file < 8; file++){
             // Init sqaure
@@ -885,6 +896,69 @@ U64 get_rook_attacks(int square, U64 occupancy){
 
 }
 
+void fen_parser(const std::string &fen){
+    std::vector<std::string> tokens;
+    std::vector<std::string> rows;
+    rows.reserve(8);
+    std::stringstream ss(fen);
+    std::string token;
+    int count = 0;
+
+    memset(bitboards,0ULL,sizeof(bitboards));
+    memset(occupancies,0ULL,sizeof(occupancies));
+    enpassent = no_square;
+    castle = 0;
+
+
+    while (getline(ss,token,' ')){
+        tokens.push_back(token);
+    }
+    
+    std::stringstream ss2(tokens[0]);
+
+    while (getline(ss2, token, '/')) {
+        rows.push_back(token);
+    }
+
+    for (auto row : rows)
+        for (int i  = 0 ;i < row.length(); i++){
+            if(isdigit(row[i])){
+                count += row[i] - '0';
+            } else{
+                int piece = char_pieces[row[i]];
+                set_bit(bitboards[piece],count);
+                count+=1;
+            }
+        }
+    tokens[1] == "w" ? (side = white) : (side = black);
+    for ( auto rights : tokens[2]){
+        if (rights == 'K'){
+            castle |= wk;
+        }else if (rights == 'Q'){
+            castle |= wq;
+        }else if (rights == 'k'){
+            castle |= bk;
+        }else if (rights == 'q'){
+            castle |= bq;
+        }
+    }
+    if (tokens[3] != "-"){
+        enpassent = coordinates_to_square[tokens[3]];
+    }
+    for(int piece = P; piece <= K; piece++){
+        occupancies[white] |= bitboards[piece];
+        occupancies[both] |= bitboards[piece];
+
+    }
+    for(int piece = p; piece <= k; piece++){
+        occupancies[black] |= bitboards[piece];
+        occupancies[both] |= bitboards[piece];
+
+    }
+        
+    
+}
+
 void init_all(){
     init_leaper_attacks();
     init_sliders_attacks(bishop);
@@ -896,28 +970,21 @@ void init_all(){
 
 int main()
 {
-    init_all();
-    set_bit(bitboards[P],a2);
-    set_bit(bitboards[P],b2);
-    set_bit(bitboards[P],c2);
-    set_bit(bitboards[P],d2);
-    set_bit(bitboards[P],e2);
-    set_bit(bitboards[P],f2);
-    set_bit(bitboards[P],g2);
-    set_bit(bitboards[P],h2);
-
-    set_bit(bitboards[N],b1);
-    set_bit(bitboards[N],g1);
-
-    set_bit(bitboards[B],c1);
-    set_bit(bitboards[B],f1);
-
-    castle |= wq;
-
-
-
- 
+    fen_parser("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     print_board();
+
+    fen_parser("rnbqk2r/p4ppp/4pn2/1pPp4/5P2/5N2/PPPN1PPP/R2QKB1R w KQkq b6 0 8");
+    print_board();
+
+    fen_parser("rnb2rk1/p4ppp/1q2pn2/3p4/5P2/1N1B1N2/PPP2PPP/R2QK2R b KQ - 3 10");
+    print_board();
+
+    fen_parser("r1b2rk1/p4ppp/1qn1pn2/3p4/5P2/1N1B1N2/PPP2PPP/2RQK2R b K - 5 11");
+    print_board();
+    //print_bitboard(occupancies[white]);
+    //print_bitboard(occupancies[black]);
+    //print_bitboard(occupancies[both]);
+
 
     return 0;
 }
