@@ -1,2 +1,2 @@
 chess: chess.cpp
-	g++  chess.cpp -o chess
+	g++ chess.cpp -o chess

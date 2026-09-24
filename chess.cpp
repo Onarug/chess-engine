@@ -324,7 +324,7 @@ enum{
 std::string ascii_pieces = "PNBRQKpnbrqk";
 
 // unicode pieces might not use since windows acts weird and this isnt the gui I want to use
-const char *unicode_pieces[12] = {
+char *unicode_pieces[12] = {
 
     "♟",
     "♞",
@@ -474,7 +474,7 @@ void print_board(){
                 }
             }
 
-            std::cout << ((piece == -1) ? '.' : (ascii_pieces[piece]));
+            std::cout << ((piece == -1) ? "." : (unicode_pieces[piece]));
             std::cout << " ";
         }
         std::cout <<"\n";
