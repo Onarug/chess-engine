@@ -1115,7 +1115,12 @@ void generate_moves(){
                 }
                 // Is queen side avaliable
                 if(castle & wq){
-
+                    if(!get_bit(occupancies[both],d1) && !get_bit(occupancies[both],c1) && !get_bit(occupancies[both],b1)){
+                        if(!is_square_attacked(d1,black) &&!is_square_attacked(c1,black) && !is_square_attacked(b1,black) ){
+                            std::cout <<  "Castling move king side: " << "e1" << " " << "c1" <<" \n";
+                            
+                        }
+                    }
                 }
             }
         } else {
@@ -1213,7 +1218,7 @@ int main()
     //fen_parser("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     //fen_parser("2r5/3P4/8/8/pp6/P7/4P2p/8 w KQkq - 0 1");
     //fen_parser("rnbqkbnr/p1pppppp/8/8/1pPPP3/8/PP3PPP/RNBQKBNR b KQkq c3 0 3");
-    fen_parser("8/8/8/8/8/4n3/PPPPPPPP/4K2R w KQkq c3 0 3");
+    fen_parser("8/8/8/8/8/8/PPPPPPPP/R3K2R w KQkq c3 0 3");
 
     print_board();
     generate_moves();
